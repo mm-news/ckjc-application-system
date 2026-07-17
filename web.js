@@ -37,14 +37,14 @@ function submitApplication(payload) {
       payload.email
     );
 
-    const [caseId] = insertNewRow(payload.applicationType, payload.subject, payload.detail, applicant, applicationLink);
+    const [internalCaseId, externalCaseId] = insertNewRow(payload.applicationType, payload.subject, payload.detail, applicant, applicationLink);
 
     if (applicationLink && isUploadedFile) {
-      moveFileToCaseFolder(applicationLink, caseId[1]);
+      moveFileToCaseFolder(applicationLink, internalCaseId);
     }
 
     sendNotificationEmail(
-      caseId[0],
+      externalCaseId,
       payload.applicationType,
       payload.subject,
       payload.detail,
@@ -52,7 +52,7 @@ function submitApplication(payload) {
       applicationLink
     );
 
-    return { success: true, caseId: caseId[0] };
+    return { success: true, caseId: externalCaseId };
   } catch (error) {
     console.warn("Error in submitApplication:", error);
     return { success: false, message: error.message };

@@ -391,7 +391,7 @@ function insertNewRow(applicationType, subject, detail, applicant, application_l
 
     SHEET.getRange(lastActualRow + 1, 1, 1, newRow.length).setValues([newRow]);
 
-    return (`${getApplicationTypeTranslation(applicationType)}線上聲請（${getCurrentReign()}）`, caseId);
+    return [`${getApplicationTypeTranslation(applicationType)}線上聲請（${getCurrentReign()}）`, caseId];
 }
 
 /**
