@@ -37,7 +37,7 @@ function submitApplication(payload) {
       payload.email
     );
 
-    const [internalCaseId, externalCaseId] = insertNewRow(payload.applicationType, payload.subject, payload.detail, applicant, applicationLink);
+    const [externalCaseId, internalCaseId] = insertNewRow(payload.applicationType, payload.subject, payload.detail, applicant, applicationLink);
 
     if (applicationLink && isUploadedFile) {
       moveFileToCaseFolder(applicationLink, internalCaseId);
