@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>評議委員會線上聲請系統</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <base target="_top">
+  <?!= HtmlService.createHtmlOutputFromFile('stylesheet').getContent(); ?>
+</head>
+
+<body>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" role="status" aria-live="polite">
+    <div class="spinner-ring"></div>
+    <p class="text-muted mb-0" style="font-size:0.9rem;">正在提交，請稍候……</p>
+  </div>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container">
+      <div class="d-flex align-items-center gap-3">
+        <img src="" alt="評" class="logo-mark" id="logo-mark">
+        <div>
+          <h1>評議委員會線上聲請系統</h1>
+          <small>依據評決字第1150129號決議，<wbr>訴訟得以線上方式聲請。<a href="https://judiciarycommittee.notion.site/"
+              class="link-opacity-25-hover" style="color: unset;" target="_blank"
+              rel="noopener noreferrer">取得聲請協助</a></small>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main content -->
+  <main class="container py-4">
+
+    <!-- Steps -->
+    <nav class="step-bar" id="step-bar" aria-label="填寫步驟">
+      <div class="step active" id="step-0"><span>聲請類別</span></div>
+      <div class="step" id="step-1"><span>聲請人資料</span></div>
+      <div class="step" id="step-2"><span>聲請內容</span></div>
+      <div class="step" id="step-3"><span>上傳聲請狀</span></div>
+    </nav>
+
+    <!-- Form Card -->
+    <div class="form-card p-4 p-md-5" id="form-card">
+      <form id="application-form" novalidate>
+
+        <!-- ── 聲請類別 ── -->
+        <div class="mb-4">
+          <div class="section-label">聲請類別</div>
+          <p class="text-muted mb-3" style="font-size:0.85rem;">請選擇本次聲請之類別。</p>
+          <div class="application-type-grid" role="radiogroup" aria-label="聲請類別">
+
+            <label class="application-type-card" for="type-resolution">
+              <input type="radio" name="applicationType" id="type-resolution" value="resolution" required>
+              <div class="application-type-icon"><i class="bi bi-file-text" aria-hidden="true"></i></div>
+              <div class="application-type-name">決議</div>
+              <div class="application-type-desc">聲請評議委員會議<wbr>統一法律見解或<wbr>處理重大爭議案件</div>
+            </label>
+
+            <label class="application-type-card" for="type-charter">
+              <input type="radio" name="applicationType" id="type-charter" value="charter">
+              <div class="application-type-icon"><i class="bi bi-bank" aria-hidden="true"></i></div>
+              <div class="application-type-name">憲章<wbr>訴訟</div>
+              <div class="application-type-desc">聲請法規範憲章審查、<wbr>作為憲章審查或<wbr>裁判憲章審查</div>
+            </label>
+
+            <label class="application-type-card" for="type-lawsuit">
+              <input type="radio" name="applicationType" id="type-lawsuit" value="lawsuit">
+              <div class="application-type-icon"><i class="bi bi-file-earmark-ruled" aria-hidden="true"></i></div>
+              <div class="application-type-name">一般<wbr>訴訟</div>
+              <div class="application-type-desc">聲請行政訴訟、<wbr>職務訴訟、<wbr>賠償訴訟、<wbr>確認訴訟、<wbr>選舉無效訴訟或<wbr>其他訴訟</div>
+            </label>
+
+          </div>
+          <div id="application-type-feedback" class="invalid-feedback-custom" style="display:none;">
+            <i class="bi bi-exclamation-circle me-1"></i>請選擇聲請類別。
+          </div>
+        </div>
+
+        <hr style="border-color: var(--color-divider); margin: 1.5rem 0;">
+
+        <!-- ── 聲請人資料 ── -->
+        <div class="mb-4">
+          <div class="section-label">聲請人資料</div>
+          <p class="text-muted mb-3" style="font-size:0.85rem;">若有多位聲請人，<wbr>請填寫代表聲請人之資料即可。</p>
+          <div class="row g-3">
+
+            <!-- 機關聲請切換 -->
+            <div class="col-12">
+              <div class="form-check" id="agencyWrapper">
+                <input class="form-check-input" type="checkbox" id="isAgency" name="isAgency" value="true">
+                <label class="form-check-label" for="isAgency">
+                  <i class="bi bi-building me-1" aria-hidden="true"></i>
+                  以機關名義聲請
+                </label>
+              </div>
+            </div>
+
+            <div class="col-sm-6">
+              <label class="form-label" for="jobTitle">
+                聲請人於<wbr>建中班聯會所任之公職 <span class="required" aria-hidden="true">*</span>
+              </label>
+              <input type="text" class="form-control" id="jobTitle" name="jobTitle" placeholder="若無則填「會員」" value="會員"
+                required autocomplete="organization-title">
+              <div class="invalid-feedback">請填寫職務，<wbr>若無則填「會員」。</div>
+            </div>
+
+            <div class="col-sm-6">
+              <label class="form-label" for="name" id="name-label">
+                姓名 <span class="required" aria-hidden="true">*</span>
+              </label>
+              <input type="text" class="form-control" id="name" name="name" placeholder="真實姓名" required
+                autocomplete="name">
+              <div class="invalid-feedback" id="name-feedback">請填寫姓名。</div>
+            </div>
+
+            <div class="col-sm-6 field-lawsuit-only" style="display:none;">
+              <label class="form-label" for="classId">
+                班級 <span class="required" aria-hidden="true">*</span>
+              </label>
+              <input type="number" class="form-control" id="classId" name="classId" placeholder="例：116"
+                inputmode="numeric" min="101" max="399">
+              <div class="invalid-feedback">請填寫3位數班級。</div>
+            </div>
+
+            <div class="col-sm-6 field-lawsuit-only" style="display:none;">
+              <label class="form-label" for="studentId">
+                學號 <span class="required" aria-hidden="true">*</span>
+              </label>
+              <input type="text" class="form-control" id="studentId" name="studentId" placeholder="例：11400514"
+                pattern="\d{8}" inputmode="numeric" maxlength="8">
+              <div class="invalid-feedback">請填寫8位數學號。</div>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label" for="email">
+                電子郵件 <span class="required" aria-hidden="true">*</span>
+              </label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-envelope" aria-hidden="true"></i></span>
+                <input type="email" class="form-control" id="email" name="email" placeholder="將用於送達相關書狀" required
+                  autocomplete="email" inputmode="email">
+              </div>
+              <div class="invalid-feedback">請輸入有效的<wbr>電子郵件地址。</div>
+            </div>
+
+            <div class="col-12">
+              <div class="form-check" id="hideNameWrapper">
+                <input class="form-check-input" type="checkbox" id="hideName" name="hideName" value="true">
+                <label class="form-check-label" for="hideName">
+                  <i class="bi bi-eye-slash me-1" aria-hidden="true"></i>
+                  請求隱匿姓名<wbr>（若選擇則職務欄應為「會員」）
+                </label>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <hr style="border-color: var(--color-divider); margin: 1.5rem 0;">
+
+        <!-- ── 聲請內容 ── -->
+        <div class="mb-4">
+          <div class="section-label">聲請內容</div>
+          <div class="row g-3">
+
+            <div class="col-12">
+              <label class="form-label" for="subject">
+                聲請標的或應受判決之事項 <span class="required" aria-hidden="true">*</span>
+              </label>
+              <input type="text" class="form-control" id="subject" name="subject" placeholder="請簡要說明聲請標的或應受判決之事項"
+                autocomplete="off" required>
+              <div class="invalid-feedback">請填寫聲請之事項<wbr>（標的務必明確）。</div>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label" for="detail">
+                聲請人所持之立場
+              </label>
+              <textarea class="form-control" id="detail" name="detail" rows="4" placeholder="請說明聲請理由及所持立場或理由"
+                autocomplete="off"></textarea>
+              <div class="invalid-feedback">聲請人得就請求決議之事項<wbr>說明所持立場與理由。</div>
+            </div>
+
+          </div>
+        </div>
+
+        <hr style="border-color: var(--color-divider); margin: 1.5rem 0;">
+
+        <!-- ── 上傳聲請狀 ── -->
+        <div class="mb-4">
+          <!-- 標題依類別切換 -->
+          <div class="section-label" id="upload-section-label">上傳聲請書</div>
+          <label class="form-label" for="application-file" id="upload-field-label">
+            聲請書附件
+          </label>
+          <!-- 上傳方式切換 -->
+          <div class="btn-group-sm mb-3" role="group" aria-label="上傳方式選擇">
+            <input type="radio" class="btn-check" name="submissionMode" id="mode-file" value="file" checked>
+            <label class="btn btn-outline-secondary" for="mode-file">
+              <i class="bi bi-upload me-1"></i>上傳檔案
+            </label>
+            <input type="radio" class="btn-check" name="submissionMode" id="mode-link" value="link">
+            <label class="btn btn-outline-secondary" for="mode-link">
+              <i class="bi bi-link-45deg me-1"></i>提供共用連結
+            </label>
+          </div>
+          <div id="upload-area-wrapper">
+            <div class="upload-area" id="upload-area" role="button" tabindex="0" aria-label="點擊或拖曳上傳聲請狀檔案">
+              <input type="file" id="application-file" name="applicationFile" accept=".pdf,.doc,.docx,.odt,.txt"
+                aria-describedby="file-name-display upload-hint">
+              <div class="upload-icon"><i class="bi bi-file-earmark-arrow-up" aria-hidden="true"></i></div>
+              <div class="upload-text" id="upload-text-main">點擊選擇檔案，<wbr>或將檔案拖曳至此</div>
+              <div class="upload-hint" id="upload-hint">支援 PDF、DOC、DOCX、ODT、TXT，<wbr>檔案大小上限 10 MB</div>
+            </div>
+            <div id="file-name-display" aria-live="polite"></div>
+            <div id="file-feedback" class="invalid-feedback-custom" style="display:none;">
+              <i class="bi bi-exclamation-circle me-1"></i>訴訟聲請必須上傳聲請狀，請選擇檔案。
+            </div>
+          </div>
+          <!-- 共用連結輸入區塊（預設隱藏） -->
+          <div id="link-input-wrapper" style="display:none;">
+            <label class="form-label" for="application-link">
+              Google 雲端硬碟共用連結
+            </label>
+            <input type="url" class="form-control" id="application-link" name="applicationLink"
+              placeholder="https://drive.google.com/..." autocorrect="off" inputmode="url">
+            <div class="invalid-feedback" id="link-feedback-text">請貼上有效的Google雲端硬碟共用連結</div>
+            <div class="form-text">
+              請於 Google 雲端硬碟中<wbr>設定「知道連結的使用者皆可檢視」後，<wbr>貼上共用連結。<wbr>
+              適用於多份檔案（請直接共用資料夾連結）或<wbr>超過 10 MB 的檔案。
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Submit ── -->
+        <div class="d-flex flex-column flex-sm-row align-items-center gap-3 pt-2">
+          <button type="submit" class="btn btn-submit" id="submit-btn">
+            <i class="bi bi-send me-2" aria-hidden="true"></i>提交聲請
+          </button>
+          <button type="button" class="btn btn-link btn-reset" id="reset-btn" onclick="resetForm()">清除重填</button>
+          <span class="text-muted d-none d-sm-inline-block ms-auto" style="font-size:0.78rem;">
+            <span class="required" aria-hidden="true">*</span> 為必填項目
+          </span>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- Result Panel -->
+    <div id="result-panel" role="alert" aria-live="assertive">
+      <div class="result-icon" id="result-icon"></div>
+      <h2 id="result-title" style="font-family: var(--font-display); font-size: 1.3rem;"></h2>
+      <div id="result-case-id"></div>
+      <p id="result-message" class="text-muted mb-3" style="font-size:0.9rem; word-break: break-word;"></p>
+      <button class="btn btn-submit" onclick="resetForm()" style="padding:0.55rem 1.8rem;">
+        <i class="bi bi-plus-circle me-2" aria-hidden="true"></i>再次提交
+      </button>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container" style="max-width:720px;">
+      <div class="d-flex flex-column flex-sm-row justify-content-between gap-1">
+        <span>臺北市立建國高級中學班聯會評議委員會</span>
+        <span id="footer-case-id"></span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <?!= HtmlService.createHtmlOutputFromFile('script').getContent(); ?>
+</body>
+
+</html>

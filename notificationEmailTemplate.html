@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+</head>
+
+<body style="font-family:'Noto Sans TC',Arial,sans-serif;color:#333;line-height:1.8;">
+    <p>
+        <?= jobTitle ?>&nbsp;
+        <?= applicantName ?>，您好：
+    </p>
+    <p>您所提出的聲請已由評議委員會線上聲請系統收訖，相關資料如下：</p>
+
+    <table style="border-collapse:collapse;width:100%;max-width:600px;">
+        <tr>
+            <td style="border:1px solid #ccc;padding:8px;background:#f5f5f5;">聲請類別</td>
+            <td style="border:1px solid #ccc;padding:8px;">
+                <?= caseId ?>
+            </td>
+        </tr>
+        <tr>
+            <td style="border:1px solid #ccc;padding:8px;background:#f5f5f5;">收件時間</td>
+            <td style="border:1px solid #ccc;padding:8px;">
+                <?= todayStr ?>
+            </td>
+        </tr>
+
+        <? if (subject) { ?>
+        <tr>
+            <td style="border:1px solid #ccc;padding:8px;background:#f5f5f5;">聲請標的</td>
+            <td style="border:1px solid #ccc;padding:8px;">
+                <?= subject ?>
+            </td>
+        </tr>
+        <? } ?>
+
+        <? if (detail) { ?>
+        <tr>
+            <td style="border:1px solid #ccc;padding:8px;background:#f5f5f5;">聲請人所持立場</td>
+            <td style="border:1px solid #ccc;padding:8px;">
+                <?!= detail ?>
+            </td>
+        </tr>
+        <? } ?>
+
+        <tr>
+            <td style="border:1px solid #ccc;padding:8px;background:#f5f5f5;">聲請人姓名</td>
+            <td style="border:1px solid #ccc;padding:8px;">
+                <?= applicantName ?>
+                <? if (hideName) { ?>（聲請人請求隱匿姓名）
+                <? } ?>
+            </td>
+        </tr>
+
+        <? if (classId) { ?>
+        <tr>
+            <td style="border:1px solid #ccc;padding:8px;background:#f5f5f5;">班級</td>
+            <td style="border:1px solid #ccc;padding:8px;">
+                <?= classId ?>
+            </td>
+        </tr>
+        <? } ?>
+
+        <? if (studentId) { ?>
+        <tr>
+            <td style="border:1px solid #ccc;padding:8px;background:#f5f5f5;">學號</td>
+            <td style="border:1px solid #ccc;padding:8px;">
+                <?= studentId ?>
+            </td>
+        </tr>
+        <? } ?>
+
+        <tr>
+            <td style="border:1px solid #ccc;padding:8px;background:#f5f5f5;">聯絡 Email</td>
+            <td style="border:1px solid #ccc;padding:8px;">
+                <?= applicantEmail ?>
+            </td>
+        </tr>
+
+        <? if (applicationLink) { ?>
+        <tr>
+            <td style="border:1px solid #ccc;padding:8px;background:#f5f5f5;">附件連結</td>
+            <td style="border:1px solid #ccc;padding:8px;"><a href="<?= applicationLink ?>">
+                    <?= applicationLink ?>
+                </a></td>
+        </tr>
+        <? } ?>
+    </table>
+
+    <p>本會將依程序儘速處理，待人工收件後寄送分案書。如有補件需求將再另行與您聯繫，感謝您的聲請。</p>
+    <p style="margin-top:24px;">──臺北市立建國高級中學班聯會評議委員會自動化系統，
+        <?= todayStr ?>
+    </p>
+</body>
+
+</html>

@@ -1,0 +1,520 @@
+<script>
+    // ── 聲請類別狀態 ──
+    // 'resolution' | 'charter' | 'lawsuit' | null
+    let currentApplicationType = null;
+    let submissionMode = 'file'; // 'file' | 'link'
+    let isAgency = false; // 是否以機關名義聲請
+
+    // 機關聲請時，職稱自動視為此值
+    const AGENCY_JOB_TITLE = '機關';
+
+    // 需要班級、學號的類別
+    const REQUIRES_CLASS_STUDENT = ['charter', 'lawsuit'];
+    // 需要強制上傳聲請狀的類別
+    const REQUIRES_FILE = ['charter', 'lawsuit'];
+    // 允許隱匿姓名的類別
+    const ALLOWS_HIDE_NAME = ['resolution'];
+
+    window.addEventListener('DOMContentLoaded', () => {
+        google.script.run.withSuccessHandler((dataUri) => {
+            if (dataUri) {
+                document.getElementById('logo-mark').src = dataUri;
+                document.getElementById('logo-mark').className = 'logo-mark-img';
+            }
+        }).withFailureHandler(() => {
+            console.warn('Failed to fetch logo URL');
+        }).getDataUri("1Pm-sg7zw0lG8Lj14qgqpJ4T03eFp_E1Z");
+
+        // 初始化聲請類別選擇監聽
+        document.querySelectorAll('input[name="applicationType"]').forEach(radio => {
+            radio.addEventListener('change', onApplicationTypeChange);
+        });
+
+        // 初始化機關聲請切換監聽
+        document.getElementById('isAgency').addEventListener('change', onAgencyChange);
+
+        // 初始化上傳方式選擇監聽
+        document.querySelectorAll('input[name="submissionMode"]').forEach(radio => {
+            radio.addEventListener("change", (e) => {
+                submissionMode = e.target.value;
+                const isLink = submissionMode === "link";
+                resetUploadArea(isLink);
+                recalcSteps();
+            });
+        });
+
+        // 觸控裝置偵測：調整上傳區提示文字
+        const isTouchDevice = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+        if (isTouchDevice) {
+            const uploadTextEl = document.getElementById('upload-text-main');
+            if (uploadTextEl) uploadTextEl.textContent = '點擊選擇檔案';
+        }
+    });
+
+    // ── 聲請類別切換處理 ──
+    function onApplicationTypeChange(e) {
+        currentApplicationType = e.target.value;
+        const requiresFile = REQUIRES_FILE.includes(currentApplicationType);
+        const allowsHideName = ALLOWS_HIDE_NAME.includes(currentApplicationType);
+
+        // 依目前類別與機關聲請狀態，切換班級、學號欄位
+        applyClassStudentVisibility();
+
+        // 切換上傳聲請狀的標題與必填提示
+        const uploadLabel = document.getElementById('upload-section-label');
+        const fieldLabel = document.getElementById('upload-field-label');
+        if (requiresFile) {
+            uploadLabel.textContent = '上傳聲請狀';
+            fieldLabel.innerHTML = '聲請狀附件 <span class="required" aria-hidden="true">*</span>';
+        } else {
+            uploadLabel.textContent = '上傳聲請書（若有）';
+            fieldLabel.innerHTML = '聲請書附件';
+        }
+
+        // 切換隱匿姓名選項的顯示（機關聲請時一律隱藏）
+        const showHideName = allowsHideName && !isAgency;
+        document.getElementById('hideName').disabled = !showHideName;
+        document.getElementById('hideNameWrapper').style.display = showHideName ? '' : 'none';
+
+        if (!showHideName) {
+            document.getElementById('hideName').checked = false;
+        }
+
+        // 隱藏類別錯誤
+        document.getElementById('application-type-feedback').style.display = 'none';
+
+        // 重新計算 step 狀態
+        recalcSteps();
+    }
+
+    // ── 機關聲請切換處理 ──
+    // 機關聲請時：職稱自動視為「機關」並停用欄位；
+    // 班級、學號一律非必填（與 REQUIRES_CLASS_STUDENT 並立，仍可送出所有類型的表單）。
+    function onAgencyChange(e) {
+        isAgency = e.target.checked;
+
+        const jobTitleEl = document.getElementById('jobTitle');
+        const nameLabelEl = document.getElementById('name-label');
+        const nameFeedbackEl = document.getElementById('name-feedback');
+        const nameEl = document.getElementById('name');
+
+        if (isAgency) {
+            // 職稱自動視為「機關」，停用並取消必填
+            jobTitleEl.value = AGENCY_JOB_TITLE;
+            jobTitleEl.disabled = true;
+            jobTitleEl.required = false;
+            jobTitleEl.classList.remove('was-validated');
+            // 姓名欄位改為機關名稱
+            nameLabelEl.innerHTML = '機關名稱 <span class="required" aria-hidden="true">*</span>';
+            nameEl.placeholder = '例：評議委員會';
+            nameEl.autocomplete = 'organization';
+            nameFeedbackEl.textContent = '請填寫機關名稱。';
+            // 機關聲請不適用隱匿姓名
+            const hideNameEl = document.getElementById('hideName');
+            hideNameEl.checked = false;
+            document.getElementById('hideNameWrapper').style.display = 'none';
+        } else {
+            // 還原為一般聲請
+            jobTitleEl.disabled = false;
+            jobTitleEl.required = true;
+            jobTitleEl.value = jobTitleEl.value === AGENCY_JOB_TITLE ? '會員' : jobTitleEl.value;
+            nameLabelEl.innerHTML = '姓名 <span class="required" aria-hidden="true">*</span>';
+            nameEl.placeholder = '真實姓名';
+            nameEl.autocomplete = 'name';
+            nameFeedbackEl.textContent = '請填寫姓名。';
+            // 還原隱匿姓名選項（依目前類別決定是否顯示）
+            const allowsHideName = ALLOWS_HIDE_NAME.includes(currentApplicationType);
+            document.getElementById('hideName').disabled = !allowsHideName;
+            document.getElementById('hideNameWrapper').style.display = allowsHideName ? '' : 'none';
+        }
+
+        // 依目前類別與機關聲請狀態，重新切換班級、學號欄位
+        applyClassStudentVisibility();
+        recalcSteps();
+    }
+
+    // ── 班級、學號欄位顯示與必填控制 ──
+    // 機關聲請時一律隱藏且非必填；否則依聲請類別（REQUIRES_CLASS_STUDENT）決定。
+    function applyClassStudentVisibility() {
+        const needsClassStudent =
+            !isAgency && REQUIRES_CLASS_STUDENT.includes(currentApplicationType);
+
+        document.querySelectorAll('.field-lawsuit-only').forEach(el => {
+            el.style.display = needsClassStudent ? '' : 'none';
+        });
+        document.getElementById('classId').required = needsClassStudent;
+        document.getElementById('studentId').required = needsClassStudent;
+    }
+
+    // ── File upload display ──
+    const fileInput = document.getElementById('application-file');
+    const fileNameDisplay = document.getElementById('file-name-display');
+    const uploadArea = document.getElementById('upload-area');
+
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+
+            if (!isAllowedFileType(file.name)) {
+                fileNameDisplay.innerHTML = '<span class="text-danger"><i class="bi bi-exclamation-circle me-1"></i>不支援的檔案類型，請上傳 PDF、DOC、DOCX、ODT 或 TXT。</span>';
+                document.getElementById('file-feedback').style.display = 'none';
+                recalcSteps();
+                return;
+            }
+
+            const sizeKB = (file.size / 1024).toFixed(0);
+            fileNameDisplay.innerHTML =
+                `<i class="bi bi-file-earmark-check text-success me-1"></i>${file.name} <span class="text-muted">(${sizeKB} KB)</span>`;
+            document.getElementById('file-feedback').style.display = 'none';
+        } else {
+            fileNameDisplay.textContent = '';
+        }
+        recalcSteps();
+    });
+
+    // Drag-and-drop
+    uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('drag-over'); });
+    uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag-over'));
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('drag-over');
+        if (e.dataTransfer.files.length > 0) {
+            fileInput.files = e.dataTransfer.files;
+            fileInput.dispatchEvent(new Event('change'));
+        }
+    });
+
+    // 允許的副檔名
+    const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx', '.odt', '.txt'];
+
+    function getFileExtension(fileName) {
+        const lastDotIndex = fileName.lastIndexOf('.');
+        return lastDotIndex !== -1 ? fileName.slice(lastDotIndex).toLowerCase() : '';
+    }
+
+    function isAllowedFileType(fileName) {
+        const ext = getFileExtension(fileName);
+        return ALLOWED_EXTENSIONS.includes(ext);
+    }
+
+    // ── Step indicator ──
+
+    function isAttachmentReady() {
+        if (submissionMode === "link") {
+            const linkVal = document.getElementById("application-link").value.trim();
+            return isValidDriveLink(linkVal);
+        }
+        return fileInput.files.length > 0;
+    }
+
+    function isValidDriveLink(link) {
+        try {
+            const url = new URL(link);
+            return url.protocol === "https:" &&
+                (url.hostname === "drive.google.com" || url.hostname === "docs.google.com");
+        } catch (e) {
+            console.warn("Invalid URL:", link, e);
+            return false;
+        }
+    }
+
+    function forceCounterRefresh() {
+        const bar = document.getElementById('step-bar');
+        bar.style.counterReset = 'none';
+        void bar.offsetHeight; // 強制觸發 reflow
+        bar.style.counterReset = '';
+    }
+
+    function updateSteps(filled) {
+        // 0=類別, 1=聲請人, 2=內容, 3=聲請狀
+        ['step-0', 'step-1', 'step-2', 'step-3'].forEach((id, i) => {
+            const el = document.getElementById(id);
+            el.className = 'step';
+            if (i < filled) el.classList.add('done');
+            else if (i === filled) el.classList.add('active');
+        });
+        forceCounterRefresh();
+    }
+
+    function recalcSteps() {
+        const typeSelected = !!currentApplicationType;
+        // 機關聲請時，班級、學號非必填（與 REQUIRES_CLASS_STUDENT 並立）
+        const needsClassStudent = !isAgency && REQUIRES_CLASS_STUDENT.includes(currentApplicationType);
+        const requiresFile = REQUIRES_FILE.includes(currentApplicationType);
+
+        const p0 = typeSelected;
+        // 機關聲請時職稱自動視為「機關」，不需使用者填寫
+        const p1BaseFields = isAgency ? ['name', 'email'] : ['jobTitle', 'name', 'email'];
+        const p1Base = p1BaseFields.every(f => document.getElementById(f).value.trim());
+        const p1Lawsuit = needsClassStudent
+            ? ['classId', 'studentId'].every(f => document.getElementById(f).value.trim())
+            : true;
+        const p1 = p1Base && p1Lawsuit;
+        const p2 = ['subject'].every(f => document.getElementById(f).value.trim());
+        const filePresent = isAttachmentReady();
+        const p3 = requiresFile ? filePresent : true;
+
+        if (p0 && p1 && p2 && p3) updateSteps(4);
+        else if (p0 && p1 && p2) updateSteps(3);
+        else if (p0 && p1) updateSteps(2);
+        else if (p0) updateSteps(1);
+        else updateSteps(0);
+    }
+
+    // Watch field groups to update step indicator
+    ['jobTitle', 'name', 'email', 'classId', 'studentId', 'subject'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', recalcSteps);
+    });
+
+    function fitCaseIdToParent() {
+        const wrapper = document.getElementById('result-case-id');
+        const el = wrapper.querySelector('.case-id');
+        if (!el) return;
+        el.style.transform = 'scaleX(1)'; // 先重置，避免疊加誤差
+        const parentWidth = wrapper.clientWidth;
+        const textWidth = el.offsetWidth;
+        if (textWidth > 0) {
+            const scale = parentWidth / textWidth;
+            if (scale < 1) {
+                el.style.transform = `scaleX(${scale})`;
+            }
+        }
+    }
+
+    const resultCaseId = document.getElementById('result-case-id');
+
+    window.addEventListener('resize', () => fitCaseIdToParent());
+
+    // ── File → Base64 ──
+    function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result.split(',')[1]);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // ── Form submit ──
+    document.getElementById('application-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const form = e.target;
+        let valid = true;
+
+        // 驗證聲請類別
+        if (!currentApplicationType) {
+            document.getElementById('application-type-feedback').style.display = 'block';
+            valid = false;
+        }
+
+        // Native validation for required text fields
+        form.querySelectorAll('[required]').forEach(el => {
+            if (el.type === 'radio') return; // radio 已另外處理
+            if (el.id === 'email' && el.value.trim() && !el.checkValidity()) {
+                el.classList.add('was-validated');
+                valid = false;
+            }
+            if (!el.value.trim()) {
+                el.classList.add('was-validated');
+                valid = false;
+            }
+        });
+        form.classList.add('was-validated');
+
+        // 驗證訴訟類必須上傳聲請狀
+        const requiresFile = REQUIRES_FILE.includes(currentApplicationType);
+        const file = fileInput.files[0] || null;
+        const linkVal = document.getElementById("application-link").value.trim() || null;
+
+        if (submissionMode === "link" && requiresFile && !isValidDriveLink(linkVal)) {
+            document.getElementById("application-link").setCustomValidity("請貼上有效的 Google 雲端硬碟分享連結");
+            valid = false;
+            return;
+
+        } else if (submissionMode === "file" && requiresFile && !file) {
+            document.getElementById('file-feedback').style.display = 'block';
+            document.getElementById("application-file").setCustomValidity("請上傳聲請狀檔案");
+            valid = false;
+        } else if (submissionMode === "link" && linkVal && !isValidDriveLink(linkVal)) {
+            document.getElementById("application-link").setCustomValidity("請貼上有效的 Google 雲端硬碟分享連結");
+            valid = false;
+        } else {
+            document.getElementById("application-file").setCustomValidity("");
+            document.getElementById("application-link").setCustomValidity("");
+        }
+
+        // File extension check
+        if (file && !isAllowedFileType(file.name)) {
+            document.getElementById('file-feedback').innerHTML =
+                '<i class="bi bi-exclamation-circle me-1"></i>不支援的檔案格式';
+            document.getElementById('file-feedback').style.display = 'block';
+            valid = false;
+        }
+
+        if (!valid) return;
+
+        // File size check (10 MB)
+        if (file && file.size > 10 * 1024 * 1024) {
+            fileNameDisplay.innerHTML = '<span class="text-danger"><i class="bi bi-exclamation-circle me-1"></i>檔案超過 10 MB 上限，請將部分檔案改為提供共用網址。</span>';
+            return;
+        }
+
+        // Show loading
+        document.getElementById('loading-overlay').classList.add('active');
+        document.getElementById('submit-btn').disabled = true;
+
+        try {
+            const base64 = submissionMode === "file" && file ? await fileToBase64(file) : null;
+            // 機關聲請時，班級、學號非必填（與 REQUIRES_CLASS_STUDENT 並立）
+            const includeClassStudent = !isAgency && REQUIRES_CLASS_STUDENT.includes(currentApplicationType);
+
+            const payload = {
+                applicationType: currentApplicationType,
+                isAgency: isAgency,
+                // 機關聲請時職稱自動視為「機關」
+                jobTitle: isAgency ? AGENCY_JOB_TITLE : (document.getElementById('jobTitle').value.trim() || null),
+                name: document.getElementById('name').value.trim() || null,
+                hideName: !isAgency && ALLOWS_HIDE_NAME.includes(currentApplicationType) ? document.getElementById('hideName').checked : false,
+                classId: includeClassStudent ? (document.getElementById('classId').value.trim() || null) : null,
+                studentId: includeClassStudent ? (document.getElementById('studentId').value.trim() || null) : null,
+                email: document.getElementById('email').value.trim() || null,
+                subject: document.getElementById('subject').value.trim() || null,
+                detail: document.getElementById('detail').value.trim() || null,
+                submissionMode: submissionMode,
+                sharedLink: submissionMode === "link" ? document.getElementById("application-link").value.trim() : null,
+                fileName: submissionMode === "file" && file ? file.name : null,
+                mimeType: submissionMode === "file" && file ? (file.type || 'application/octet-stream') : null,
+                fileData: base64,
+            };
+
+            const data = await new Promise((resolve, reject) => {
+                google.script.run
+                    .withSuccessHandler(resolve)
+                    .withFailureHandler(reject)
+                    .submitApplication(payload);
+            });
+
+            if (data.success) {
+                showResult(true, data.caseId);
+            } else {
+                showResult(false, null, data.message);
+            }
+        } catch (err) {
+            showResult(false, null, err.message);
+        } finally {
+            document.getElementById('loading-overlay').classList.remove('active');
+            fitCaseIdToParent();
+        }
+    });
+
+    // reset applicant job title to "會員" when hideName is checked
+    document.getElementById('hideName').addEventListener('change', (e) => {
+        if (e.target.checked) resetApplicantJobTitle();
+    });
+
+    function showResult(success, caseId, errMsg) {
+        document.getElementById('form-card').style.display = 'none';
+        const panel = document.getElementById('result-panel');
+        panel.style.display = 'block';
+        panel.className = success ? 'form-card p-4 p-md-5 success' : 'form-card p-4 p-md-5 error';
+
+        document.getElementById('result-icon').textContent = success ? '✅' : '❌';
+        document.getElementById('result-title').textContent = success ? '聲請已成功送出' : '提交失敗';
+
+        if (success && caseId) {
+            document.getElementById('result-case-id').innerHTML =
+                `<div class="case-id">${caseId}</div>`;
+            document.getElementById('result-message').innerHTML =
+                '系統將寄送回條至您填寫的電子郵件信箱。<br>待人工處理完畢後，將再寄送分案書至您填寫的電子郵件信箱。';
+            document.getElementById('footer-case-id').textContent = `${caseId}`;
+        } else {
+            document.getElementById('result-case-id').innerHTML = '';
+            document.getElementById('result-message').textContent =
+                errMsg || '提交時發生未知錯誤，請稍後再試或聯繫評議委員會信箱。';
+        }
+        document.getElementById('step-bar').style.display = 'none';
+    }
+
+    function resetForm() {
+        currentApplicationType = null;
+        isAgency = false;
+
+        document.getElementById('application-form').reset();
+        document.getElementById('application-form').classList.remove('was-validated');
+        document.getElementById('file-name-display').textContent = '';
+        document.getElementById('submit-btn').disabled = false;
+        document.getElementById('form-card').style.display = '';
+        document.getElementById('result-panel').style.display = 'none';
+        document.getElementById('footer-case-id').textContent = '';
+        document.getElementById('step-bar').style.display = '';
+        document.getElementById('application-type-feedback').style.display = 'none';
+        document.getElementById('file-feedback').style.display = 'none';
+
+        // 重設班級、學號欄位
+        document.querySelectorAll('.field-lawsuit-only').forEach(el => {
+            el.style.display = 'none';
+        });
+        document.getElementById('classId').required = false;
+        document.getElementById('studentId').required = false;
+
+        // 重設機關聲請相關欄位
+        const jobTitleEl = document.getElementById('jobTitle');
+        jobTitleEl.disabled = false;
+        jobTitleEl.required = true;
+        jobTitleEl.value = '會員';
+        document.getElementById('name-label').innerHTML = '姓名 <span class="required" aria-hidden="true">*</span>';
+        const nameEl = document.getElementById('name');
+        nameEl.placeholder = '真實姓名';
+        nameEl.autocomplete = 'name';
+        document.getElementById('name-feedback').textContent = '請填寫姓名。';
+
+        // 重設上傳區標題
+        document.getElementById('upload-section-label').textContent = '上傳聲請書（若有）';
+        document.getElementById('upload-field-label').innerHTML = '聲請書附件';
+        resetUploadArea(false);
+
+        // 重設類別卡片選取狀態
+        document.querySelectorAll('.application-type-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+
+        updateSteps(0);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /**
+     * Reset the upload area to its initial state.
+     * @param {boolean} isLink - If true, show the link input; otherwise, show the file upload area.
+     */
+    function resetUploadArea(isLink) {
+        document.getElementById("file-feedback").style.display = "none";
+        document.getElementById("file-name-display").textContent = "";
+        document.getElementById("application-file").value = "";
+        document.getElementById("application-link").value = "";
+        document.getElementById("upload-area-wrapper").style.display = isLink ? "none" : "block";
+        document.getElementById("upload-area-wrapper").ariaHidden = isLink ? "true" : "false";
+        document.getElementById("application-file").disabled = isLink;
+        document.getElementById("application-link").disabled = !isLink;
+        document.getElementById("link-input-wrapper").style.display = isLink ? "block" : "none";
+        document.getElementById("link-input-wrapper").ariaHidden = isLink ? "false" : "true";
+    }
+
+    function resetApplicantJobTitle() {
+        document.getElementById('jobTitle').value = '會員';
+    }
+
+    // Keyboard accessibility for upload area
+    uploadArea.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
+    });
+
+    // 聲請類別卡片視覺選取狀態同步
+    document.querySelectorAll('.application-type-card').forEach(card => {
+        card.addEventListener('click', () => {
+            document.querySelectorAll('.application-type-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+        });
+    });
+</script>
