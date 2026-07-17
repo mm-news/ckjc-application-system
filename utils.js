@@ -359,7 +359,7 @@ function sanitizeSpreadsheetInput(input) {
  * @param {string} detail 聲請人所持立場
  * @param {Applicant} applicant 聲請人
  * @param {string|null} application_link 聲請狀之雲端硬碟連結
- * @returns {string} caseId 案件號碼
+ * @returns {string[]} caseId 案件號碼
  */
 function insertNewRow(applicationType, subject, detail, applicant, application_link) {
     const SHEET = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("聲請收件表格");
@@ -391,7 +391,7 @@ function insertNewRow(applicationType, subject, detail, applicant, application_l
 
     SHEET.getRange(lastActualRow + 1, 1, 1, newRow.length).setValues([newRow]);
 
-    return `${getApplicationTypeTranslation(applicationType)}線上聲請（${getCurrentReign()}）`;
+    return (`${getApplicationTypeTranslation(applicationType)}線上聲請（${getCurrentReign()}）`, caseId);
 }
 
 /**
