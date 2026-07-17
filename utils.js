@@ -1,5 +1,5 @@
-const JC_EMAIL = PropertiesService.getScriptProperties.getProperty("JC_EMAIL") || "";
-const GOOGLE_GROUP_EMAIL = PropertiesService.getScriptProperties.getProperty("GOOGLE_GROUP_EMAIL") || "";
+const JC_EMAIL = PropertiesService.getScriptProperties().getProperty("JC_EMAIL") || "";
+const GOOGLE_GROUP_EMAIL = PropertiesService.getScriptProperties().getProperty("GOOGLE_GROUP_EMAIL") || "";
 
 const ALLOWED_TYPES = {
     ".pdf": ["application/pdf"],
