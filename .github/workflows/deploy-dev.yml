@@ -19,6 +19,8 @@ jobs:
         with:
           node-version: "20"
           cache: npm
+      - name: Install dependencies
+        run: npm ci
       - name: Setup clasp credentials
         run: |
           echo '${{ secrets.DEV_CLASPRC_JSON }}' > ~/.clasprc.json
