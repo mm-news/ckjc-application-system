@@ -28,5 +28,5 @@ jobs:
 
       - name: Push and deploy to GAS
         run: |
-          npx @google/clasp push --force
-          npx @google/clasp deploy -i '${{ secrets.DEV_ID }}' -d '${{ github.event.head_commit.message }}'
+          npx --no-install clasp push --force
+          npx --no-install clasp deploy -i '${{ secrets.DEV_ID }}' -d '${{ github.event.head_commit.message }}'
