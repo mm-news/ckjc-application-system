@@ -362,7 +362,10 @@ function sanitizeSpreadsheetInput(input) {
  * @returns {string[]} caseId 案件號碼
  */
 function insertNewRow(applicationType, subject, detail, applicant, application_link) {
-    const SHEET = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("聲請收件表格");
+    const storageSpreadsheetId = PropertiesService.getScriptProperties().getProperty("STORAGE_SPREADSHEET_ID");
+    if (!storageSpreadsheetId) throw new Error("Missing script property: STORAGE_SPREADSHEET_ID");
+    const SHEET = SpreadsheetApp.openById(storageSpreadsheetId).getSheetByName("聲請收件表格");
+    if (!SHEET) throw new Error("Sheet not found: 聲請收件表格");
     let caseId = generateCaseID(applicationType);
     const newRow = [
         caseId,
