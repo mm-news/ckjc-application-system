@@ -5,7 +5,12 @@ const AGENCY_JOB_TITLE = "機關";
 
 function doGet(e) {
   let template = HtmlService.createTemplateFromFile("index");
-  return template.evaluate().setTitle("評議委員會線上聲請系統").setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL).addMetaTag('viewport', 'width=device-width, initial-scale=1.0');
+  return template
+    .evaluate()
+    .setTitle("評議委員會線上聲請系統")
+    .setFaviconUrl("https://raw.githubusercontent.com/mm-news/ckjc-application-system/main/%E6%9C%83%E5%BE%BD.png")
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1.0');
 }
 
 function submitApplication(payload) {
