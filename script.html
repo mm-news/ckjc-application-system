@@ -163,8 +163,13 @@
             }
 
             const sizeKB = (file.size / 1024).toFixed(0);
-            fileNameDisplay.innerHTML =
-                `<i class="bi bi-file-earmark-check text-success me-1"></i>${file.name} <span class="text-muted">(${sizeKB} KB)</span>`;
+            fileNameDisplay.replaceChildren();
+            const fileIcon = document.createElement('i');
+            fileIcon.className = 'bi bi-file-earmark-check text-success me-1';
+            const fileSize = document.createElement('span');
+            fileSize.className = 'text-muted';
+            fileSize.textContent = `(${sizeKB} KB)`;
+            fileNameDisplay.append(fileIcon, file.name + ' ', fileSize);
             document.getElementById('file-feedback').style.display = 'none';
         } else {
             fileNameDisplay.textContent = '';
