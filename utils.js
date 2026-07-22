@@ -362,7 +362,7 @@ function sanitizeSpreadsheetInput(input) {
  * @returns {string[]} caseId 案件號碼
  */
 function insertNewRow(applicationType, subject, detail, applicant, application_link) {
-    const SHEET = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("聲請收件表格");
+    const SHEET = SpreadsheetApp.openById(PropertiesService.getScriptProperties().getProperty("STORAGE_SPREADSHEET_ID")).getSheetByName("聲請收件表格");
     let caseId = generateCaseID(applicationType);
     const newRow = [
         caseId,
