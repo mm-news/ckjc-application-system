@@ -5,6 +5,7 @@ const AGENCY_JOB_TITLE = "機關";
 
 function doGet(e) {
   let template = HtmlService.createTemplateFromFile("index");
+  template.isDev = PropertiesService.getScriptProperties().getProperty("IS_DEV") === "true";
   return template
     .evaluate()
     .setTitle("評議委員會線上聲請系統")
