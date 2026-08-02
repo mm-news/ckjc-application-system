@@ -1,5 +1,5 @@
 const APPLICATION_TYPES = ["resolution", "charter", "lawsuit"];
-const ALLOWS_HIDE_NAME = ['resolution'];
+const ALLOWS_HIDE_NAME = ['resolution', "lawsuit"];
 // 機關聲請時，職稱自動視為此值
 const AGENCY_JOB_TITLE = "機關";
 

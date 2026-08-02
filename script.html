@@ -13,7 +13,7 @@
     // 需要強制上傳聲請狀的類別
     const REQUIRES_FILE = ['charter', 'lawsuit'];
     // 允許隱匿姓名的類別
-    const ALLOWS_HIDE_NAME = ['resolution'];
+    const ALLOWS_HIDE_NAME = ['resolution', 'lawsuit'];
 
     window.addEventListener('DOMContentLoaded', () => {
         google.script.run.withSuccessHandler((dataUri) => {
