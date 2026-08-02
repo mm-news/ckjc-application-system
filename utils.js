@@ -226,7 +226,7 @@ function validateSharedLink(link) {
 }
 
 function saveFileToDrive(base64Data, fileName, mimeType) {
-    const folder = DriveApp.getFolderById("1PYR2JRor_Xd9AQUWiWzbTXDOV2Vxatwr");
+    const folder = DriveApp.getFolderById(PropertiesService.getScriptProperties().getProperty("STORAGE_FOLDER_ID"));
     const blob = validateFile(fileName, mimeType, base64Data);
     const file = folder.createFile(blob);
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
