@@ -5,7 +5,7 @@ const AGENCY_JOB_TITLE = "機關";
 
 function doGet(e) {
   let template = HtmlService.createTemplateFromFile("index");
-  template.isDev = PropertiesService.getScriptProperties().getProperty("IS_DEV") === "true";
+  template.devAlert = PropertiesService.getScriptProperties().getProperty("IS_DEV") === "true" ? "This is the dev branch, all functionalities are up but mails will not be sent to the committee email." : 'For testing or development purposes, please proceed to <a href="https://script.google.com/macros/s/AKfycbzYxZYG2xvMxWb3ZlIFS9RmLvAFN_-yRGibR450BRXQwSUGBbPx6-F_wbT1HZMDsRr4/exec" class="alert-link">The dev branch</a> to avoid spamming to the committee email!';
   return template
     .evaluate()
     .setTitle("評議委員會線上聲請系統")

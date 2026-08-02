@@ -42,9 +42,9 @@
   <!-- Main content -->
   <main class="container py-4">
     <!-- Alert -->
-    <div class="alert alert-info alert-dismissible d-flex align-items-center fade show" role="alert">
+    <div class="alert alert-info alert-dismissible d-flex align-items-center" role="alert">
       <i class="bi bi-info-circle"></i>
-      <div><? if (isDev) { ?>This is the dev branch, all functionalities are up but mails will not be sent to the committee email.<?} else { ?>For testing or development, please proceed to <a href="https://script.google.com/macros/s/AKfycbzYxZYG2xvMxWb3ZlIFS9RmLvAFN_-yRGibR450BRXQwSUGBbPx6-F_wbT1HZMDsRr4/exec" class="alert-link">The dev branch</a> to avoid spamming to the committee email!<? } ?></div>
+      <div class="alert-body"><?!= devAlert; ?></div>
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
     <!-- Steps -->
