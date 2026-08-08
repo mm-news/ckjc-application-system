@@ -4,6 +4,7 @@
     let currentApplicationType = null;
     let submissionMode = 'file'; // 'file' | 'link'
     let isAgency = false; // 是否以機關名義聲請
+    let isTranslateScriptRequested = false;
 
     // 機關聲請時，職稱自動視為此值
     const AGENCY_JOB_TITLE = '機關';
@@ -43,6 +44,11 @@
             });
         });
 
+        const translateBtn = document.getElementById('translate-to-english-btn');
+        if (translateBtn) {
+            translateBtn.addEventListener('click', onTranslateToEnglishClick);
+        }
+
         // 觸控裝置偵測：調整上傳區提示文字
         const isTouchDevice = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
         if (isTouchDevice) {
@@ -50,6 +56,76 @@
             if (uploadTextEl) uploadTextEl.textContent = '點擊選擇檔案';
         }
     });
+
+    window.googleTranslateElementInit = function googleTranslateElementInit() {
+        new google.translate.TranslateElement(
+            {
+                pageLanguage: 'zh-TW',
+                includedLanguages: 'en',
+                autoDisplay: false,
+            },
+            'google_translate_element'
+        );
+    };
+
+    function ensureTranslateScript() {
+        if (isTranslateScriptRequested) return;
+
+        isTranslateScriptRequested = true;
+        const script = document.createElement('script');
+        script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+        script.async = true;
+        script.defer = true;
+        document.body.appendChild(script);
+    }
+
+    function waitForTranslateCombo(maxRetry = 40) {
+        return new Promise((resolve) => {
+            const check = (remaining) => {
+                const combo = document.querySelector('.goog-te-combo');
+                if (combo) {
+                    resolve(combo);
+                    return;
+                }
+
+                if (remaining <= 0) {
+                    resolve(null);
+                    return;
+                }
+
+                window.setTimeout(() => check(remaining - 1), 150);
+            };
+            check(maxRetry);
+        });
+    }
+
+    function applyEnglishTranslation(combo) {
+        if (combo.value !== 'en') {
+            combo.value = 'en';
+            combo.dispatchEvent(new Event('change'));
+        }
+
+        document.documentElement.lang = 'en';
+    }
+
+    function onTranslateToEnglishClick() {
+        const btn = document.getElementById('translate-to-english-btn');
+        if (!btn) return;
+
+        btn.disabled = true;
+        btn.textContent = 'Translating...';
+        ensureTranslateScript();
+
+        waitForTranslateCombo().then((combo) => {
+            if (combo) {
+                applyEnglishTranslation(combo);
+                btn.textContent = 'Translated to English';
+            } else {
+                btn.disabled = false;
+                btn.textContent = 'Translate page to English';
+            }
+        });
+    }
 
     // ── 聲請類別切換處理 ──
     function onApplicationTypeChange(e) {
