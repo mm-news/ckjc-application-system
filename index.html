@@ -42,7 +42,7 @@
   <!-- Main content -->
   <main class="container py-4">
     <!-- Alert -->
-    <div class="alert alert-info alert-dismissible d-flex alert-container" role="alert">
+    <div class="alert alert-info alert-dismissible d-flex alert-container" role="alert" id="dev-alert">
       <div class="icon-wrapper">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle" aria-hidden="true" focusable="false"
           viewBox="0 0 16 16">
@@ -54,6 +54,24 @@
       <div class="alert-body"><?!= devAlert; ?></div>
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
+    <div class="alert alert-info d-flex alert-container mt-2" role="status" id="translate-alert">
+      <div class="icon-wrapper">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-translate" aria-hidden="true" focusable="false"
+          viewBox="0 0 16 16">
+          <path d="M4.545 6.714 4.11 8H3l1.862-5h1.216l1.862 5H6.833l-.435-1.286zm1.352-.822L5.135 3.62h-.063l-.756 2.272z" />
+          <path d="M0 2a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v3h-1V2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h3v1H2a2 2 0 0 1-2-2z" />
+          <path d="M11.138 9.995Q10.461 9.996 10 9.79q-.46-.206-.73-.59Q9 8.817 9 8.304q0-.815.57-1.256.57-.442 1.573-.442.379 0 .692.052.313.052.575.144v-.164q0-.465-.27-.73-.268-.268-.743-.268-.42 0-.76.126-.34.126-.64.357l-.361-.718q.362-.292.86-.455.5-.163 1.083-.163.966 0 1.497.52.53.519.53 1.49V10h-.862v-.505h-.037q-.26.244-.62.372-.36.128-.819.128m.214-.748q.468 0 .817-.25.349-.251.349-.683v-.279a2.5 2.5 0 0 0-.492-.118 3 3 0 0 0-.566-.046q-.523 0-.804.192a.64.64 0 0 0-.281.56q0 .335.234.48.234.144.743.144" />
+          <path d="M13.596 15.443 8.47 10.317l.707-.707 5.127 5.126z" />
+        </svg>
+      </div>
+      <div class="alert-body d-flex flex-column flex-sm-row align-items-sm-center gap-2 w-100">
+        <span>Need English? Click once to translate and re-render this page in English.</span>
+        <button type="button" class="btn btn-sm btn-outline-primary ms-sm-auto" id="translate-to-english-btn">
+          Translate page to English
+        </button>
+      </div>
+    </div>
+    <div id="google_translate_element" aria-hidden="true" style="display:none;"></div>
     <!-- Steps -->
     <nav class="step-bar" id="step-bar" aria-label="填寫步驟">
       <div class="step active" id="step-0"><span>聲請類別</span></div>
