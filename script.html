@@ -71,11 +71,23 @@
     function ensureTranslateScript() {
         if (isTranslateScriptRequested) return;
 
-        isTranslateScriptRequested = true;
+        const existing = document.getElementById('google-translate-script');
+        if (existing) {
+            isTranslateScriptRequested = true;
+            return;
+        }
+
         const script = document.createElement('script');
+        script.id = 'google-translate-script';
         script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
         script.async = true;
         script.defer = true;
+        script.onerror = () => {
+            isTranslateScriptRequested = false;
+            script.remove();
+        };
+
+        isTranslateScriptRequested = true;
         document.body.appendChild(script);
     }
 
