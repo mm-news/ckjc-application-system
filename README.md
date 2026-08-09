@@ -79,6 +79,7 @@ Deploy as a web app from the Apps Script editor or via `clasp deploy`.
 The initial prototype was developed with the assistance of Perplexity, based on a defined idea of functionality, structure, procedure, and platform.  
 Throughout development, Perplexity is consulted for information gathering and bug resolution that is far beyond the author's immediate knowledge.  
 GitHub Copilot is used for code review and generating potential fixes, though inline ghost text suggestions remain disabled for the most part.
+The function calling Google Translate was made by GitHub Copilot, but debugged by the author.  
 
 ## Licence
 
