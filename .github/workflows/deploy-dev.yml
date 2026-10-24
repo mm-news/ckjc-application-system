@@ -1,33 +1,51 @@
 name: Deploy (Dev)
-on:
-  push:
-    branches: ['dev-*']
-
 permissions:
   contents: read
 
+on:
+  push:
+    branches: [dev-*]
+
 jobs:
   deploy:
+    name: Deploy to GAS (Dev)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     concurrency:
-      group: deploy-${{ github.ref }}
+      group: deploy-dev
       cancel-in-progress: false
-                  
+
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
       - uses: actions/setup-node@v7
         with:
           node-version: "20"
           cache: npm
+
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
+
       - name: Setup clasp credentials
+        env:
+          CLASPRC_JSON: ${{ secrets.DEV_CLASPRC_JSON }}
+          CLASP_JSON: ${{ secrets.DEV_CLASP_JSON }}
         run: |
-          echo '${{ secrets.DEV_CLASPRC_JSON }}' > ~/.clasprc.json
-          echo '${{ secrets.DEV_CLASP_JSON }}' > .clasp.json
+          umask 077
+          printf '%s' "$CLASPRC_JSON" > ~/.clasprc.json
+          printf '%s' "$CLASP_JSON" > .clasp.json
 
       - name: Push and deploy to GAS
+        env:
+          DEPLOY_DESC_INPUT: ${{ github.event.head_commit.message }}
+          DEV_ID: ${{ secrets.DEV_ID }}
         run: |
-          DEPLOY_DESC=$(printf '%s' "${{ github.event.head_commit.message }}" | tr '\n' ' ' | cut -c1-100)
+          DEPLOY_DESC=$(printf '%s' "$DEPLOY_DESC_INPUT" | tr '\n' ' ' | cut -c1-100)
           npx --no-install clasp push --force
-          npx --no-install clasp deploy -i '${{ secrets.DEV_ID }}' -d "$DEPLOY_DESC"
+          npx --no-install clasp deploy -i "$DEV_ID" -d "$DEPLOY_DESC"
+
+      - name: Cleanup credentials
+        if: always()
+        run: rm -f ~/.clasprc.json .clasp.json
